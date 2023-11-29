@@ -25,6 +25,7 @@ class Program
 
         //SerilogExceptions();
 
+
         //NLog
 
         //NLog();
@@ -33,6 +34,7 @@ class Program
         //log4net
 
         //Log4net();
+
 
         //LoggerManual
 
