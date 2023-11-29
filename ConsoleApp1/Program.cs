@@ -21,18 +21,22 @@ class Program
 
         //Serilog AAI
 
-        SerilogAAI();
+        //SerilogAAI();
+
+        //SerilogExceptions();
 
         //NLog
 
         //NLog();
 
-        
+
         //log4net
 
         //Log4net();
 
+        //LoggerManual
 
+        ManualLogger();
 
 
     }
@@ -65,6 +69,8 @@ class Program
 
 
     }
+
+
 
     public static void NLog()
     {
@@ -105,6 +111,7 @@ class Program
         }
     }
 
+
     public static void SerilogAAI()
     {
 
@@ -130,6 +137,44 @@ class Program
             Thread.Sleep(1000); //Descanso 1 min entre logs
             
         }
+
+    }
+
+    public static void ManualLogger()
+    {
+
+        //Se crea un archivo para loggear mensajes
+
+        StreamWriter file = File.AppendText("consoleLogger.txt");
+
+        ManLog("Inicio del loggeo", file);
+
+        try
+        {
+
+            ManLog("Se intenta tirar exception", file);
+
+            ThrowException();
+
+        }
+        catch(Exception ex)
+        {
+
+            ManLog($"{ex.Message}", file);
+        }
+
+        ManLog("Se finaliza la aplicacion", file);
+
+    }
+
+    public static void ManLog(string mensaje, StreamWriter file)
+    {
+        //Timestamp del log
+        string tiempo = DateTime.Now.ToString();
+
+        Console.WriteLine($"{mensaje} || {tiempo}");
+
+        file.WriteLine($"{mensaje} || {tiempo}");
 
     }
 
