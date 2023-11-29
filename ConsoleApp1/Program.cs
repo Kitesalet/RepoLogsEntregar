@@ -1,10 +1,17 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using log4net;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Extensions.Configuration;
 using NLog;
 using Serilog;
+using System.Security.Principal;
+using LogManager = NLog.LogManager;
 
 class Program
 {
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    private static readonly ILog Log4NetLogger = log4net.LogManager.GetLogger(typeof(Program));
+    private static readonly Logger NLogLogger = LogManager.GetCurrentClassLogger();
+
     static void Main()
     {
 
@@ -12,13 +19,21 @@ class Program
 
         //Serilog();
 
+        //Serilog AAI
+
+        SerilogAAI();
+
         //NLog
 
-        NLog();
+        //NLog();
 
+        
         //log4net
 
         //Log4net();
+
+
+
 
     }
 
@@ -26,18 +41,14 @@ class Program
     {
 
         // Diferentes log levels
-        Logger.Debug("Mensaje debug, útil para logs de info sobre debug");
-        Logger.Info("Mensaje informacional en log4net");
-        Logger.Warn("Mensaje de warning / alerta, posible problema");
-        Logger.Error("Mensaje de error");
-        Logger.Fatal("Error fatal");
-
-        // Logeo estructurado
-        Logger.Info("Logeo estructurado: {Username} logged in.", "ImanolEchazarreta");
+        Log4NetLogger.Debug("Mensaje debug, útil para logs de info sobre debug");
+        Log4NetLogger.Info("Mensaje informacional en log4net");
+        Log4NetLogger.Warn("Mensaje de warning / alerta, posible problema");
+        Log4NetLogger.Error("Mensaje de error");
+        Log4NetLogger.Fatal("Error fatal");
 
         // Log con propiedades customizadas
         var customProperties = new { Environment = "Production", Version = "1.0" };
-        Logger.Info("Custom Props: {@CustomProperties}", customProperties);
 
         // Logeo exc
         try
@@ -47,12 +58,11 @@ class Program
         catch (Exception ex)
         {
             // Log con mas detalles en base al error
-            Logger.Error("Ha ocurrido un error: {@ExceptionDetails}", ex, new { CustomDetail = "AdditionalDetail" });
+            Log4NetLogger.Error("Ha ocurrido un error: {@ExceptionDetails}", ex);
         }
 
-        Logger.Info("Application shutdown.");
+        Log4NetLogger.Info("Application shutdown.");
 
-        LogManager.Flush();
 
     }
 
@@ -61,19 +71,19 @@ class Program
         try
         {
             // Log de muchos mensajes con diferentes niveles
-            Logger.Trace("Para información muy detallada.");
-            Logger.Debug("Mensajes con información de debugeo.");
-            Logger.Info("Mensaje informacional");
-            Logger.Warn("Mensaje de alerta, posible problema");
-            Logger.Error("Mensaje de error");
-            Logger.Fatal("Mensaje crítico");
+            NLogLogger.Trace("Para información muy detallada.");
+            NLogLogger.Debug("Mensajes con información de debugeo.");
+            NLogLogger.Info("Mensaje informacional");
+            NLogLogger.Warn("Mensaje de alerta, posible problema");
+            NLogLogger.Error("Mensaje de error");
+            NLogLogger.Fatal("Mensaje crítico");
 
             // Logeo estructurado
-            Logger.Info("Structured log: {Username} se logueo.", "ImanolEchazarreta");
+            NLogLogger.Info("Structured log: {Username} se logueo.", "ImanolEchazarreta");
 
             // Log con propiedades custom / Tipo Anonimo
             var customProperties = new { Environment = "Production", Version = "1.0" };
-            Logger.Info("Propiedades custom: {@CustomProperties}", customProperties);
+            NLogLogger.Info("Propiedades custom: {@CustomProperties}", customProperties);
 
             // Loggeo excepciones
             try
@@ -83,10 +93,10 @@ class Program
             catch (Exception ex)
             {
                 // Log excepción con detalles
-                Logger.Error(ex, "Ocurrio un error. Detalles: {@ExceptionDetails}", new { CustomDetail = "AdditionalDetail" });
+                NLogLogger.Error(ex, "Ocurrio un error. Detalles: {@ExceptionDetails}", new { CustomDetail = "AdditionalDetail" });
             }
 
-            Logger.Fatal("Shutdown.");
+            NLogLogger.Fatal("Shutdown.");
         }
         finally
         {
@@ -94,6 +104,35 @@ class Program
             LogManager.Shutdown();
         }
     }
+
+    public static void SerilogAAI()
+    {
+
+        //Se crea el logger
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .Enrich.FromLogContext()
+            .WriteTo.Console() // Log a consola
+            .WriteTo.File("logs.txt") //Log a un archivo
+                .WriteTo.ApplicationInsights(new TelemetryConfiguration { InstrumentationKey = "x"}, TelemetryConverter.Traces) //Loggea en mi ApplicationInsights, si la InstrumentationKey es correcta
+            .CreateLogger();
+
+        Random rng = new Random();
+        int i = 11;
+        while(i != 10)
+        {
+            Log.Information($"El nuevo numero loggeado es: {i}");
+
+            i = rng.Next(1, 20);
+
+            Log.Debug("El numero no ha sido 10...");
+
+            Thread.Sleep(1000); //Descanso 1 min entre logs
+            
+        }
+
+    }
+
     public static void Serilog()
     {
 
